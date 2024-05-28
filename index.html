@@ -107,21 +107,26 @@
         // Format city name, country code
         let value = document.getElementById("search").value.trim();
 
-        const weather = await fetch(
-          `https://api.openweathermap.org/data/2.5/find?q=${value}&appid=${apiKey}&units=${units}&limit=10`
+        const cities = await fetch(
+          `https://api.openweathermap.org/data/2.5/find?q=${value}&appid=${apiKey}&units=${units}&cnt=20`
         ).then((res) => res.json());
 
-        if (weather.list.length > 0) {
-          totalPages = weather.list.length / 3;
-          weatherList = weather.list;
+        if (cities.list.length > 0) {
+          totalPages = cities.list.length / 3;
           currentPage = 1;
+          const weatherPromises = cities.list.map((city) => {
+            return fetch(
+              `https://api.openweathermap.org/data/2.5/weather?id=${city.id}&appid=${apiKey}&units=${units}&cnt=20`
+            ).then((res) => res.json());
+          });
+
+          weatherList = await Promise.all(weatherPromises);
           createPagination(currentPage);
         }
       }
 
       function createPagination(pageNumber) {
         currentPage = pageNumber;
-        console.log(weatherList);
         weathers.innerHTML = "";
         for (
           let i = (currentPage - 1) * limit;
@@ -135,12 +140,12 @@
         pagination.innerHTML = "";
         for (let i = 0; i < totalPages; i++)
           pagination.innerHTML += `
-                <button class="number ${
-                  currentPage === i + 1 && "active"
-                }" onclick="createPagination(${i + 1})">
-                <p>${i + 1}</p>
-                </button>
-        `;
+                      <button class="number ${
+                        currentPage === i + 1 && "active"
+                      }" onclick="createPagination(${i + 1})">
+                      <p>${i + 1}</p>
+                      </button>
+              `;
       }
 
       function changeToImperial() {
@@ -192,58 +197,73 @@
       }
 
       function createWeather(weather) {
+        const sunriseTime = convertTimestampToTime(weather.sys.sunrise);
+        const sunsetTime = convertTimestampToTime(weather.sys.sunset);
         // weather component
-        const row = `            <div class="row">
-                <div class="col-4 image">
-                    <img src="https://openweathermap.org/img/wn/${
-                      weather.weather[0].icon
-                    }@2x.png" alt="Weather Icon">
-                </div>
-                <div class="col-8 info">
-                    <p class="info-title">
-                        <span class="city">${weather.name}, ${
+        const row = `<div class="row">
+                              <div class="image">
+                                  <img src="https://openweathermap.org/img/wn/${
+                                    weather.weather[0].icon
+                                  }@2x.png" alt="Weather Icon" class="weather-img">
+                                  <div class="info-title">
+                                  <p>
+                                      <span class="city">${weather.name}, ${
           weather.sys.country
         }
-        <img src="http://openweathermap.org/images/flags/${weather.sys.country.toLowerCase()}.png" alt="flag" class="flag"></span>
-                    </p>
-                    <p>                        <i class="weather-desc">${
-                      weather.weather[0].description
-                    }</i></p>
-                    <p class="info-desc">
-                        <span class="badge text-bg-info">${weather.main.temp.toFixed(
-                          1
-                        )}${
-          units === "metric" ? "°C" : "°F"
-        }</span> Feels like ${weather.main.feels_like.toFixed(1)}${
-          units === "metric" ? "°C" : "°F"
-        }
-                    </p>
-                                        <p class="info-temps">
-                        Max: ${weather.main.temp_max.toFixed(1)}${
+                                      <img src="http://openweathermap.org/images/flags/${weather.sys.country.toLowerCase()}.png" alt="flag" class="flag">
+                                      </span
+                                  </p>
+                                  <p>
+                                  <i class="weather-desc">${
+                                    weather.weather[0].description
+                                  }</i>
+                                  <span class="badge text-bg-info">${weather.main.temp.toFixed(
+                                    1
+                                  )}${units === "metric" ? "°C" : "°F"}</span>
+                                  </p>
+                                  </div>
+                              </div>
+                              <div class="info">
+                              <div class="info-flex">
+                              <div class="info-group">
+                                  <p class="info-desc">
+                                  Feels like ${weather.main.feels_like.toFixed(
+                                    1
+                                  )}${units === "metric" ? "°C" : "°F"}
+                                  </p>
+                                  <p class="info-temps">
+                                  Max: ${weather.main.temp_max.toFixed(1)}${
           units === "metric" ? "°C" : "°F"
         }, Min: ${weather.main.temp_min.toFixed(1)}${
           units === "metric" ? "°C" : "°F"
         }
-                    </p>
-                    <p class="info-wind">
-                        Wind: ${weather.wind.speed.toFixed(2)} ${
+                                  </p>
+                                  <p class="info-wind">
+                                  Wind: ${weather.wind.speed.toFixed(2)} ${
           units === "metric" ? "m/s" : "mph"
         }
-                    </p>
-                    <p class="info-humidity">
-                        Humidity: ${weather.main.humidity}%
-                    </p>
-                    <p class="info-pressure">
-                        Pressure: ${weather.main.pressure} hPa
-                    </p>
-                    <p class="info-coords">
-                        Geo coords <span class="coords">[${weather.coord.lat.toFixed(
-                          4
-                        )}, ${weather.coord.lon.toFixed(4)}]</span>
-                    </p>
-                </div>
-            </div>
-        `;
+                                  </p>
+                              </div>
+                              <div class="info-group"><p class="info-humidity">
+                              Humidity: ${weather.main.humidity}%
+                              </p>
+                              <p class="info-pressure">
+                              Pressure: ${weather.main.pressure} hPa
+                              </p>
+                              <p class="sunrise-sunset">
+                              Sunrise: ${sunriseTime}hrs <br>
+                              Sunset:  ${sunsetTime} hrs
+                              </p>
+                              </div>
+                          </div>
+                          <p class="info-coords">
+                          Geo coords <span class="coords">[${weather.coord.lat.toFixed(
+                            4
+                          )}, ${weather.coord.lon.toFixed(4)}]</span>
+                          </p>
+                      </div>
+                  </div>
+              `;
         weathers.innerHTML += row;
       }
     </script>
