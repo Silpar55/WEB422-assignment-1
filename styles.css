@@ -1,3 +1,14 @@
+/**************************
+*
+•⁠  ⁠WEB422 – Assignment 1
+•⁠  ⁠I declare that this assignment is my own work in accordance with Seneca Academic Policy. 
+•⁠  ⁠No part of this assignment has been copied manually or electronically from any other source
+•⁠  ⁠(including web sites) or distributed to other students.
+* 
+•⁠  ⁠Name: Alejandro Student ID: 142655224 Date: 2024-05-28
+*
+**************************
+**/
 :root {
   --primary: #fb6d48;
   --secondary: #673f69;
@@ -15,7 +26,13 @@ body {
 .hero {
   background-color: var(--primary);
   height: 250px;
-  margin-bottom: 20px;
+}
+
+.error {
+  font-size: 2em;
+  color: var(--white);
+  padding: 50px 100px;
+  display: none;
 }
 
 .search-input {

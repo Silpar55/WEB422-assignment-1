@@ -1,3 +1,14 @@
+<!-- /**************************
+*
+•⁠  ⁠WEB422 – Assignment 1
+•⁠  ⁠I declare that this assignment is my own work in accordance with Seneca Academic Policy. 
+•⁠  ⁠No part of this assignment has been copied manually or electronically from any other source
+•⁠  ⁠(including web sites) or distributed to other students.
+* 
+•⁠  ⁠Name: Alejandro Student ID: 142655224 Date: 2024-05-28
+*
+**************************
+**/ -->
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -47,6 +58,7 @@
         </button>
       </div>
     </div>
+    <div class="bg-danger error" id="error"></div>
     <section id="weathers"></section>
     <div id="pagination" class="pagination"></div>
 
@@ -111,7 +123,7 @@
           `https://api.openweathermap.org/data/2.5/find?q=${value}&appid=${apiKey}&units=${units}&cnt=20`
         ).then((res) => res.json());
 
-        if (cities.list.length > 0) {
+        if (cities && cities.list.length > 0) {
           totalPages = cities.list.length / 3;
           currentPage = 1;
           const weatherPromises = cities.list.map((city) => {
@@ -122,7 +134,26 @@
 
           weatherList = await Promise.all(weatherPromises);
           createPagination(currentPage);
+        } else {
+          displayError();
+          setTimeout(() => {
+            hideError();
+          }, 3000);
         }
+      }
+
+      function displayError() {
+        let h1 = document.createElement("h1");
+        const error = document.getElementById("error");
+        error.style.display = "block";
+        h1.innerText = "No results were found, try another city";
+        error.appendChild(h1);
+      }
+
+      function hideError() {
+        const error = document.getElementById("error");
+        error.style.display = "none";
+        error.innerHTML = "";
       }
 
       function createPagination(pageNumber) {
@@ -197,8 +228,12 @@
       }
 
       function createWeather(weather) {
-        const sunriseTime = convertTimestampToTime(weather.sys.sunrise);
-        const sunsetTime = convertTimestampToTime(weather.sys.sunset);
+        const timezone = weather.timezone;
+        const sunriseTime = convertTimestampToTime(
+          weather.sys.sunrise,
+          timezone
+        );
+        const sunsetTime = convertTimestampToTime(weather.sys.sunset, timezone);
         // weather component
         const row = `<div class="row">
                               <div class="image">
